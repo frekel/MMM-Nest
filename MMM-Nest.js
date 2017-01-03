@@ -3,7 +3,7 @@
 /* Magic Mirror
  * Module: MMM-Nest
  *
- * By Luke Moch
+ * By Frank van der Stad (Based on MMM-Nest by Luke Moch)
  * MIT Licensed.
  */
 
@@ -13,7 +13,7 @@ Module.register("MMM-Nest",{
 	defaults: {
 		token: "",
 		thermNum: "",
-		displayType: "nest",
+		displayType: "frekel",
 		displayName: false,
 		units: config.units,
 		updateInterval: 60 * 1000, // updates every minute per Nest's recommendation
@@ -122,42 +122,135 @@ Module.register("MMM-Nest",{
 			} 
 			wrapper.appendChild(table);
 
+		} else if (this.config.displayType === "frekel") {
+			var header = document.createElement("header");
+			header.classList.add("module-header");
+			header.innerHTML = "Wat is de temperatuur?";
+			wrapper.appendChild(header);
+
+
+			for (i = 0; i < this.numberTherms; i++) {
+				var table = document.createElement("table");
+				table.classList.add("small", "table");
+
+                                var dashOneCell = document.createElement("td");
+				dashOneCell.className = "center";
+				dashOneCell.innerHTML = " - ";
+                                var dashTwoCell = document.createElement("td");
+				dashTwoCell.className = "center";
+				dashTwoCell.innerHTML = " - ";
+                                var dashThreeCell = document.createElement("td");
+				dashThreeCell.className = "center";
+				dashThreeCell.innerHTML = " - ";
+				
+                                var tmpOneCell = document.createElement("td");
+				tmpOneCell.innerHTML = "&nbsp;";
+                                var tmpTwoCell = document.createElement("td");
+				tmpTwoCell.innerHTML = "&nbsp;";
+                                var tmpThreeCell = document.createElement("td");
+				tmpThreeCell.innerHTML = "&nbsp;";
+
+				// ROW 1
+				var rowone = document.createElement("tr");
+				var nameCell = document.createElement("td");
+				nameCell.innerHTML = this.thermName[i] + " :";
+				rowone.appendChild(nameCell);
+
+				rowone.appendChild(tmpOneCell);
+				rowone.appendChild(tmpTwoCell);
+				table.appendChild(rowone);
+
+				var rowtwo = document.createElement("tr");
+				rowtwo.appendChild(dashOneCell);
+
+				var rowtwoLabel = document.createElement("td");
+				rowtwoLabel.innerHTML = "Ambient: ";
+				rowtwoLabel.className = "left";
+				rowtwo.appendChild(rowtwoLabel);
+
+				var currentCell = document.createElement("td");
+				currentCell.className = "bright right";
+				currentCell.innerHTML = this.ambientTemp[i] + "&deg;";
+                                rowtwo.appendChild(currentCell);
+				table.appendChild(rowtwo);
+				
+				var rowthree = document.createElement("tr");
+				rowthree.appendChild(dashTwoCell);
+
+				var rowthreeLabel = document.createElement("td");
+				rowthreeLabel.innerHTML = "Target: ";
+				rowthreeLabel.className = "left";
+				rowthree.appendChild(rowthreeLabel);
+
+				var setCell = document.createElement("td");
+				if(this.hvacState[i] === "heating" ) {
+                                        setCell.className = "bright right heatingCell";
+                                } else if(this.hvacState[i] === "cooling") {
+                                        setCell.className = "bright right coolingCell";
+                                } else {
+					setCell.className = "bright right";
+				}
+				if(this.hvacMode[i] === 'heat-cool') {
+					setCell.innerHTML = this.targetTempL[i] + "&deg &bull; " + this.targetTempH[i] + "&deg;";
+				} else {
+                                	setCell.innerHTML = this.targetTemp[i] + "&deg;";
+				}
+                                rowthree.appendChild(setCell);
+				table.appendChild(rowthree);
+
+
+				var rowfour = document.createElement("tr");
+				rowfour.appendChild(dashThreeCell);
+
+				var rowfourLabel = document.createElement("td");
+				rowfourLabel.innerHTML = "Humidity: ";
+				rowfourLabel.className = "left";
+				rowfour.appendChild(rowfourLabel);
+
+				var humidityCell = document.createElement("td");
+				humidityCell.className = "bright right";
+                                humidityCell.innerHTML = this.humidity[i] + "%";
+                                rowfour.appendChild(humidityCell);
+				table.appendChild(rowfour);
+
+				wrapper.appendChild(table);
+
+			} 
+			
+
 		} else {
 			var theName = document.createElement("div");
-
-			if (this.hvacMode[this.chosenOne] === 'heat-cool') {
-				wrapper.id = "circle";
-				wrapper.className = this.hvacState[this.chosenOne] + "HC";
-				wrapper.innerHTML = this.targetTempL[this.chosenOne] + " &bull; " + this.targetTempH[this.chosenOne];
-			} else {
-				wrapper.id = "circle";
-				wrapper.className = this.hvacState[this.chosenOne];
-				wrapper.innerHTML = this.targetTemp[this.chosenOne];
-			}
 			var theTemp = document.createElement("div");
 
 			if (this.hvacState[this.chosenOne] === "cooling") {
-			    theTemp.innerHTML = this.ambientTemp[this.chosenOne];
+			    theTemp.innerHTML = "&darr;" + this.ambientTemp[this.chosenOne];
 			    theTemp.className = "coolingText";
-			    wrapper.appendChild(theTemp);
 			} else if ( this.hvacState === "heating") {
-			    theTemp.innerHTML = this.ambientTemp[this.chosenOne];
+			    theTemp.innerHTML = this.ambientTemp[this.chosenOne] + "&uarr;";
 			    theTemp.className = "heatingText";
-			    wrapper.appendChild(theTemp);
 			} else if ( this.hvacMode !== 'heat-cool') {
 				if (parseInt(this.ambientTemp[this.chosenOne]) < parseInt(this.targetTemp[this.chosenOne])) {
-					theTemp.innerHTML = this.ambientTemp[this.chosenOne];
+					theTemp.innerHTML = this.ambientTemp[this.chosenOne] + "&uarr;";
 					theTemp.className = "heatingText";
-					wrapper.appendChild(theTemp);
 				} else if (parseInt(this.ambientTemp[this.chosenOne]) > parseInt(this.targetTemp[this.chosenOne])) {
-					theTemp.innerHTML = this.ambientTemp[this.chosenOne];
+					theTemp.innerHTML = "&darr;" + this.ambientTemp[this.chosenOne];
 					theTemp.className = "coolingText";
-					wrapper.appendChild(theTemp);
 				}
 			}
+			
+			if (this.hvacMode[this.chosenOne] === 'heat-cool') {
+				wrapper.id = "circle";
+				wrapper.className = "large bright " + this.hvacState[this.chosenOne] + "HC";
+				wrapper.innerHTML = this.targetTempL[this.chosenOne] + " &bull; " + this.targetTempH[this.chosenOne];
+			} else {
+				wrapper.id = "circle";
+				wrapper.className = "large bright " + this.hvacState[this.chosenOne];
+				wrapper.innerHTML = this.targetTemp[this.chosenOne];
+			}
+			wrapper.appendChild(theTemp);
 
 			var theHumidity = document.createElement("div");
-			theHumidity.innerHTML = this.humidity[this.chosenOne] + "%";
+			theHumidity.innerHTML = this.humidity[this.chosenOne] +"%";
 		    	theHumidity.className = "humidityText";
 	   	 	wrapper.appendChild(theHumidity);
 
