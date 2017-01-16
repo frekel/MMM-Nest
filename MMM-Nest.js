@@ -67,6 +67,7 @@ Module.register("MMM-Nest",{
                         return wrapper;
                 }
 
+		wrapper.className = "MMM-nest";
 		if (this.config.displayType === "list") {
 			
 			var table = document.createElement("table");
